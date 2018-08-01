@@ -35,6 +35,7 @@ socket.on('disconnect', function(){
 })
 
 socket.on('newMessage', function(message){
+
 	var template = jQuery('#message-template').html();
 	var formattedTime = moment(message.createdAt).format('h:mm a');
 
@@ -80,10 +81,12 @@ jQuery('#message-form').on('submit', function(e){
 
 	var messageTextbox = jQuery('[name=message]');
 
+	var params = jQuery.deparam(window.location.search);
+
 	socket.emit('createMessage', {
 		from: 'User',
 		text: messageTextbox.val()
-	}, function(){
+	}, params, function(){
 		messageTextbox.val('');
 	})
 });
