@@ -19,11 +19,23 @@ app.use(express.static(publicPath));
 io.on('connection', (socket) => {
   console.log('New user connected');
 
+   var rooms = Array.from(new Set(users.getRoomList()));
 
+   socket.emit('roomList', rooms);
+ 
+   console.log(rooms);
   socket.on('join', (params, callback) => {
-    if (!isRealString(params.name) || !isRealString(params.room)) {
-      return callback('Name and room name are required.');
+    if (!isRealString(params.name)) {
+    	if(!isRealString(params.room)&&users.getRoomList().length===9){
+	      return callback('Name and room name are required.');
+	  }
     }
+
+    if(params.room===''&&params.dropdown!==''){
+    	params.room=params.dropdown
+    }
+    params.name = params.name.toLowerCase();
+    params.room = params.room.toLowerCase();
 
     //joining room
     socket.join(params.room);
@@ -32,7 +44,18 @@ io.on('connection', (socket) => {
     //io.emit -> io.to('The Office Fans').emit
     //socket.broadcast.emit -> socket.broadcast.to('The Office Fans').emit
     // socket.emit
+
+    if(users.getUserList(params.room).find(name=>name===params.name)!=undefined){
+    	return callback('Duplicate name found in room');
+    }
+
     users.removeUser(socket.id);
+
+    socket.on('roomSelected', (room)=>{
+	  	//console.log("This is the room selected: ",room);
+	  	params.room = room
+	  })
+
     users.addUser(socket.id, params.name, params.room);
 
     io.to(params.room).emit('updateUserList', users.getUserList(params.room));
@@ -41,6 +64,7 @@ io.on('connection', (socket) => {
   	socket.broadcast.to(params.room).emit('newMessage', generateMessage('Admin', `${params.name} has joined.`));
     callback();
   });
+
 
   socket.on('createMessage', (message, callback) => {
   	var user = users.getUser(socket.id);

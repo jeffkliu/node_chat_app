@@ -51,6 +51,10 @@ class Users {
 		return filtered.map(user=>user.name);
 	}
 
+	getRoomList(){
+		return this.users.map(user=>user.room)
+	}
+
 	getNumberOfUsers(){
 		return this.users.length;
 	}
